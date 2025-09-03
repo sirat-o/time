@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Current Time</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* --- ENHANCED GLASSMORPHISM --- */
+      .glass-card {
+        background: rgba(0, 0, 0, 0.05);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
+
+      .glass-card:hover {
+        background: rgba(41, 40, 40, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      /* --- ANIMATIONS & TRANSITIONS --- */
+      .fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+
+      .fade-out {
+        animation: fadeOut 0.5s ease-in forwards;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        to {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      }
+
+      /* --- TIMER BLOCK FIXED SIZING --- */
+      .timer-block {
+        width: 120px;
+        /* Fixed width for all timer blocks */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      @media (min-width: 768px) {
+        .timer-block {
+          width: 200px;
+          /* Larger fixed width for desktop */
+        }
+      }
+
+      .timer-value {
+        width: 100%;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        /* Ensures consistent digit width */
+      }
+
+      /* --- TIMER SEPARATOR STYLING --- */
+      .timer-separator {
+        font-size: clamp(2.5rem, 10vw, 5rem);
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-0.75rem);
+        /* Vertically align with numbers */
+        margin: 0 -0.5rem;
+        /* Adjust spacing */
+      }
+
+      :fullscreen .timer-separator {
+        transform: translateY(-1.5rem);
+        color: #e0e0e0;
+        font-weight: 900;
+        font-size: clamp(2.5rem, 10vw, 10rem);
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(calc(100% + 1.25rem));
+          opacity: 0;
+        }
+
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOut {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+
+        to {
+          opacity: 0;
+          transform: translateX(calc(100% + 1.25rem));
+        }
+      }
+
+      @keyframes progress {
+        from {
+          width: 100%;
+        }
+
+        to {
+          width: 0%;
+        }
+      }
+
+      /* --- ENHANCED FULLSCREEN DESIGN --- */
+      body:fullscreen {
+        background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      }
+
+      :fullscreen #timer-display {
+        gap: 2rem;
+      }
+
+      :fullscreen .glass-card {
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+      }
+
+      :fullscreen .timer-value {
+        color: #e0e0e0;
+      }
+
+      :fullscreen .timer-block {
+        width: 20vw;
+        /* Responsive but consistent width in fullscreen */
+      }
+
+      /* --- MOBILE FULLSCREEN FIXES --- */
+      @media (max-width: 768px) {
+        :fullscreen .timer-block {
+          width: 22vw;
+          /* Slightly larger for mobile */
+          min-width: 70px;
+          /* Prevent becoming too small */
+        }
+
+        :fullscreen .timer-value {
+          font-size: 3.5rem !important;
+          /* Force larger font size on mobile */
+        }
+
+        :fullscreen #timer-display {
+          gap: 0.5rem;
+          /* Reduce gap on mobile */
+          flex-wrap: nowrap;
+          /* Ensure all elements stay in one row */
+        }
+
+        :fullscreen .timer-separator {
+          font-size: 2.5rem;
+          transform: translateY(-0.5rem);
+          margin: 0 -0.25rem;
+        }
+
+        /* Adjust font sizes for mobile fullscreen */
+        :fullscreen #hours,
+        :fullscreen #minutes,
+        :fullscreen #seconds {
+          font-size: 3.5rem !important;
+        }
+      }
+
+      /* Additional mobile-specific fullscreen adjustments */
+      @media (max-width: 480px) and (fullscreen) {
+        :fullscreen .timer-block {
+          width: 20vw;
+          min-width: 60px;
+        }
+
+        :fullscreen .timer-value {
+          font-size: 2.8rem !important;
+        }
+
+        :fullscreen #hours,
+        :fullscreen #minutes,
+        :fullscreen #seconds {
+          font-size: 2.8rem !important;
+        }
+
+        :fullscreen .timer-separator {
+          font-size: 2rem;
+          transform: translateY(-0.4rem);
+        }
+
+        :fullscreen #timer-display {
+          gap: 0.25rem;
+        }
+      }
+
+      /* Fix for very small mobile devices */
+      @media (max-width: 360px) and (fullscreen) {
+        :fullscreen .timer-block {
+          width: 18vw;
+          min-width: 50px;
+        }
+
+        :fullscreen .timer-value {
+          font-size: 2.2rem !important;
+        }
+
+        :fullscreen #hours,
+        :fullscreen #minutes,
+        :fullscreen #seconds {
+          font-size: 2.2rem !important;
+        }
+
+        :fullscreen .timer-separator {
+          font-size: 1.6rem;
+          transform: translateY(-0.3rem);
+        }
+      }
+
+      /* Ensure proper layout in portrait mode */
+      @media (orientation: portrait) and (fullscreen) {
+        :fullscreen #timer-display {
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+      }
+
+      /* Also hide when using browser-specific fullscreen pseudo-classes */
+      :-webkit-full-screen #help-btn,
+      :-moz-full-screen #help-btn,
+      :-ms-fullscreen #help-btn {
+        display: none;
+      }
+      
+      /* Date display styling */
+      #current-date-display {
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      
+      /* AM/PM indicator styling */
+      #ampm {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.7);
+        margin-left: 0.5rem;
+        align-self: center;
+      }
+      
+      @media (min-width: 768px) {
+        #ampm {
+          font-size: 2rem;
+        }
+      }
+      
+      :fullscreen #ampm {
+        font-size: 3rem;
+        color: #e0e0e0;
+      }
+    </style>
+  </head>
+
+  <body class="bg-gradient-to-br from-[#111827] to-[#000000] text-white min-h-screen flex items-center justify-center p-4 transition-colors duration-500">
+    <div id="timer-section">
+      <h2 id="current-date-display" class="text-base md:text-lg text-gray-400 mb-6 font-medium"></h2>
+
+      <div id="timer-display" class="flex flex-wrap items-center justify-center gap-x-2 md:gap-x-4 mb-12">
+        <div id="hours-block" class="timer-block glass-card p-6 md:p-10 rounded-2xl">
+          <span id="hours" class="timer-value block text-5xl md:text-8xl font-black">00</span>
+          <span class="timer-label block text-sm md:text-lg text-gray-400 uppercase tracking-widest">Hours</span>
+        </div>
+
+        <div id="separator-hm" class="timer-separator">:</div>
+
+        <div id="minutes-block" class="timer-block glass-card p-6 md:p-10 rounded-2xl">
+          <span id="minutes" class="timer-value block text-5xl md:text-8xl font-black">00</span>
+          <span class="timer-label block text-sm md:text-lg text-gray-400 uppercase tracking-widest">Minutes</span>
+        </div>
+
+        <div id="separator-ms" class="timer-separator">:</div>
+
+        <div id="seconds-block" class="timer-block glass-card p-6 md:p-10 rounded-2xl">
+          <span id="seconds" class="timer-value block text-5xl md:text-8xl font-black">00</span>
+          <span class="timer-label block text-sm md:text-lg text-gray-400 uppercase tracking-widest">Seconds</span>
+        </div>
+        
+        <span id="ampm" class="self-center mt-4 md:mt-0"></span>
+      </div>
+    </div>
+
+    <button id="fullscreen-btn" class="fixed bottom-5 right-5 glass-card p-3 rounded-full hover:bg-white/20 transition-all duration-300 z-10" title="Toggle Fullscreen">
+      <svg id="fullscreen-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+      </svg>
+      <svg id="exit-fullscreen-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
+        <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+      </svg>
+    </button>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM ELEMENT REFERENCES ---
+        const dom = {
+          fullscreenBtn: document.getElementById('fullscreen-btn'),
+          fullscreenIcon: document.getElementById('fullscreen-icon'),
+          exitFullscreenIcon: document.getElementById('exit-fullscreen-icon'),
+          currentDateDisplay: document.getElementById('current-date-display'),
+          hoursEl: document.getElementById('hours'),
+          minutesEl: document.getElementById('minutes'),
+          secondsEl: document.getElementById('seconds'),
+          ampmEl: document.getElementById('ampm'),
+          timerValues: document.querySelectorAll('.timer-value'),
+          timerLabels: document.querySelectorAll('.timer-label'),
+        };
+
+        // --- WAKE LOCK VARIABLE ---
+        let wakeLock = null;
+
+        // --- TIME DISPLAY FUNCTIONS ---
+        function updateTime() {
+          const now = new Date();
+          
+          // Convert to 12-hour format
+          let hours = now.getHours();
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          hours = hours % 12;
+          hours = hours ? hours : 12; // Convert 0 to 12
+          
+          // Update time
+          dom.hoursEl.textContent = hours.toString().padStart(2, '0');
+          dom.minutesEl.textContent = now.getMinutes().toString().padStart(2, '0');
+          dom.secondsEl.textContent = now.getSeconds().toString().padStart(2, '0');
+          dom.ampmEl.textContent = ampm;
+          
+          // Update date
+          const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          };
+          dom.currentDateDisplay.textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Update time immediately and then every second
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // --- WAKE LOCK FUNCTIONS ---
+        async function requestWakeLock() {
+          try {
+            if ('wakeLock' in navigator) {
+              wakeLock = await navigator.wakeLock.request('screen');
+              console.log('Wake Lock is active');
+              
+              wakeLock.addEventListener('release', () => {
+                console.log('Wake Lock was released');
+              });
+            }
+          } catch (err) {
+            console.error(`${err.name}, ${err.message}`);
+          }
+        }
+        
+        function releaseWakeLock() {
+          if (wakeLock !== null) {
+            wakeLock.release();
+            wakeLock = null;
+          }
+        }
+        
+        // Handle visibility change to reacquire wake lock
+        document.addEventListener('visibilitychange', async () => {
+          if (document.fullscreenElement && document.visibilityState === 'visible') {
+            await requestWakeLock();
+          }
+        });
+
+        // --- FULLSCREEN FUNCTIONALITY ---
+        function toggleFullscreen() {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+              console.error(`Error enabling full-screen mode: ${err.message}`);
+            });
+          } else {
+            document.exitFullscreen();
+          }
+        }
+
+        dom.fullscreenBtn.addEventListener('click', toggleFullscreen);
+        
+        document.addEventListener('fullscreenchange', async () => {
+          const isFullscreen = !!document.fullscreenElement;
+          
+          dom.fullscreenIcon.classList.toggle('hidden', isFullscreen);
+          dom.exitFullscreenIcon.classList.toggle('hidden', !isFullscreen);
+          
+          dom.timerValues.forEach(el => {
+            el.classList.toggle('md:text-8xl', !isFullscreen);
+            el.classList.toggle('text-5xl', !isFullscreen);
+            el.classList.toggle('md:text-9xl', isFullscreen);
+            el.classList.toggle('lg:text-[15vw]', isFullscreen);
+          });
+          
+          dom.timerLabels.forEach(el => el.classList.toggle('hidden', isFullscreen));
+          
+          // Handle wake lock based on fullscreen state
+          if (isFullscreen) {
+            await requestWakeLock();
+          } else {
+            releaseWakeLock();
+          }
+        });
+
+        // Add 'f' key for fullscreen toggle
+        document.addEventListener('keydown', (e) => {
+          if (e.code === 'KeyF' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            toggleFullscreen();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
